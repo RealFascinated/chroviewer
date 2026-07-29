@@ -75,6 +75,10 @@ interface UseViewerRemoteSourceOptions {
   setError: (message: string) => void;
   setSettings: Dispatch<SetStateAction<ViewerSettings>>;
   setSourceChoices: Dispatch<SetStateAction<MapLookup[]>>;
+  /** When set, the current session is a BeatLeader replay — skip ScoreSaber leaderboard queries. */
+  shareScoreIdBL?: string | null;
+  /** When set, the current session is a ScoreSaber replay — skip BeatLeader leaderboard queries. */
+  shareScoreId?: string | null;
 }
 
 export function useViewerRemoteSource({
@@ -87,6 +91,8 @@ export function useViewerRemoteSource({
   setError,
   setSettings,
   setSourceChoices,
+  shareScoreIdBL,
+  shareScoreId,
 }: UseViewerRemoteSourceOptions) {
   const t = useTranslations('viewer');
   const sourceT = useTranslations('source');
@@ -466,10 +472,12 @@ export function useViewerRemoteSource({
   });
 
   const mapHash = mapIdentity?.hash;
+  const skipScoreSaber = !isViewerSourceEnabled('scoresaber') || shareScoreIdBL !== undefined;
+  const skipBeatLeader = !isViewerSourceEnabled('beatleader') || shareScoreId !== undefined;
   const { data: scoreSaberLeaderboards = [] } = useQuery({
     queryKey: ['scoresaber', 'leaderboards', mapHash],
     queryFn:
-      mapHash === undefined || !isViewerSourceEnabled('scoresaber')
+      mapHash === undefined || skipScoreSaber
         ? skipToken
         : async ({ signal }): Promise<ScoreSaberLeaderboard[]> => {
             const result = await fetchScoreSaberLeaderboards(mapHash, { signal });
@@ -481,7 +489,7 @@ export function useViewerRemoteSource({
   const { data: beatLeaderLeaderboards = [] } = useQuery({
     queryKey: ['beatleader', 'leaderboards', mapHash],
     queryFn:
-      mapHash === undefined || !isViewerSourceEnabled('beatleader')
+      mapHash === undefined || skipBeatLeader
         ? skipToken
         : async ({ signal }): Promise<BeatLeaderLeaderboard[]> => {
             const result = await fetchBeatLeaderLeaderboards(mapHash, { signal });

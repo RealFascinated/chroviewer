@@ -39,6 +39,8 @@ export function useViewerSources({ setError, setSettings, onClearViewer, onMapLo
     setError,
     setSettings,
     setSourceChoices,
+    shareScoreIdBL: files.shareScoreIdBL,
+    shareScoreId: files.shareScoreId,
   });
 
   return {
