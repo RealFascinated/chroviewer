@@ -22,6 +22,12 @@ export const env = createEnv({
     VITE_BEATSAVER_API_URL: publicApiUrl.default('https://api.beatsaver.com'),
     VITE_SCORESABER_API_URL: publicApiUrl.default('https://scoresaber.com'),
     VITE_BEATLEADER_API_URL: publicApiUrl.default('https://api.beatleader.com'),
+    VITE_BEATLEADER_PROXY_URL: z
+      .string()
+      .url()
+      .transform((value) => value.replace(/\/$/, ''))
+      .optional()
+      .default('https://proxy.fascinated.cc'),
     VITE_LUDUS_URL: publicApiUrl.default('https://ludus-1.scoresaber.com'),
     VITE_ENABLED_SOURCES: enabledViewerSourcesSchema,
   },
@@ -29,6 +35,7 @@ export const env = createEnv({
     VITE_BEATSAVER_API_URL: import.meta.env.VITE_BEATSAVER_API_URL,
     VITE_SCORESABER_API_URL: import.meta.env.VITE_SCORESABER_API_URL,
     VITE_BEATLEADER_API_URL: import.meta.env.VITE_BEATLEADER_API_URL,
+    VITE_BEATLEADER_PROXY_URL: import.meta.env.VITE_BEATLEADER_PROXY_URL,
     VITE_LUDUS_URL: import.meta.env.VITE_LUDUS_URL,
     VITE_ENABLED_SOURCES: import.meta.env.VITE_ENABLED_SOURCES,
   },

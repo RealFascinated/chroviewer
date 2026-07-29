@@ -21,6 +21,9 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .env*
 !.env.example*
 
+# standalone replay viewer (separate project)
+BeatSaber-Web-Replays/
+
 # caches
 .eslintcache
 .cache

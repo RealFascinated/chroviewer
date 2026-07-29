@@ -6,6 +6,10 @@ import { requestArrayBuffer, requestJson } from '../http';
 import { SourceError } from '../source-error';
 import type { DownloadProgressHandler, FetchRequest, ScoreSaberReplayPlayer, SourceResult } from '../source-types';
 
+function proxiedUrl(target: string) {
+  return `${env.VITE_BEATLEADER_PROXY_URL}/${target}`;
+}
+
 interface ResolveOptions {
   onProgress?: DownloadProgressHandler;
   request?: FetchRequest;
@@ -104,7 +108,7 @@ export async function fetchBeatLeaderPlayer(
   playerId: string,
   options: ResolveOptions = {},
 ): Promise<SourceResult<ScoreSaberReplayPlayer>> {
-  const player = await requestJson(`${env.VITE_BEATLEADER_API_URL}/player/${playerId}`, playerSchema, {
+  const player = await requestJson(proxiedUrl(`${env.VITE_BEATLEADER_API_URL}/player/${playerId}`), playerSchema, {
     ...options,
     source: 'beatleader',
     label: `BeatLeader player ${playerId}`,
@@ -125,7 +129,7 @@ export async function fetchBeatLeaderReplayMetadata(scoreId: string, options: Re
   }
   return Result.gen(async function* () {
     const score = yield* Result.await(
-      requestJson(`${env.VITE_BEATLEADER_API_URL}/score/${scoreId}`, scoreSchema, {
+      requestJson(proxiedUrl(`${env.VITE_BEATLEADER_API_URL}/score/${scoreId}`), scoreSchema, {
         ...options,
         source: 'beatleader',
         label: `BeatLeader score ${scoreId}`,
@@ -137,7 +141,7 @@ export async function fetchBeatLeaderReplayMetadata(scoreId: string, options: Re
 }
 
 export function fetchBeatLeaderReplayFile(url: string, options: ResolveOptions = {}) {
-  return requestArrayBuffer(url, {
+  return requestArrayBuffer(proxiedUrl(url), {
     ...options,
     source: 'beatleader',
     label: `BeatLeader replay`,
@@ -175,10 +179,14 @@ const leaderboardsResponseSchema = z
   });
 
 export async function fetchBeatLeaderLeaderboards(hash: string, options: ResolveOptions = {}) {
-  return requestJson(`${env.VITE_BEATLEADER_API_URL}/leaderboards/hash/${hash}`, leaderboardsResponseSchema, {
-    ...options,
-    source: 'beatleader',
-    label: `BeatLeader leaderboards for ${hash}`,
-    operation: 'load-leaderboards',
-  });
+  return requestJson(
+    proxiedUrl(`${env.VITE_BEATLEADER_API_URL}/leaderboards/hash/${hash}`),
+    leaderboardsResponseSchema,
+    {
+      ...options,
+      source: 'beatleader',
+      label: `BeatLeader leaderboards for ${hash}`,
+      operation: 'load-leaderboards',
+    },
+  );
 }
