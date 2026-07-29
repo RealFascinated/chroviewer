@@ -885,3 +885,117 @@ export async function renderReplayPreview(scoreId: string, origin: string): Prom
     return Result.ok(rendered);
   });
 }
+
+export async function renderBeatLeaderReplayPreview(
+  scoreId: string,
+  origin: string,
+): Promise<Result<ArrayBuffer, PreviewError>> {
+  const cached = cacheGet(replayPreviewCache, `bl:${scoreId}`);
+  if (cached !== undefined) return Result.ok(cached);
+
+  const fontsPending = loadFonts(origin);
+  const { fetchBeatLeaderReplayPreviewData } = await import('./replay-preview-bl-data.server');
+  const scoreResult = (await fetchBeatLeaderReplayPreviewData(scoreId)).mapError(
+    (error) =>
+      new PreviewError({
+        message: error.message,
+        status: error.status === 404 ? 404 : 502,
+        cause: error,
+      }),
+  );
+  if (scoreResult.isErr()) return Result.err(scoreResult.error);
+  const raw = scoreResult.value;
+
+  const flagPath = flagFile(raw.player.country);
+  const [cover, avatar, flag, logo] = await Promise.all([
+    fetchImageDataUrl(raw.song.cover),
+    fetchImageDataUrl(raw.player.avatar),
+    flagPath === null ? Promise.resolve(null) : publicImageDataUrl(flagPath, 'image/png', origin),
+    publicImageDataUrl('beatleader.svg', 'image/svg+xml', origin),
+  ]);
+
+  return Result.gen(async function* () {
+    const fonts = yield* Result.await(
+      Result.tryPromise({
+        try: () => fontsPending,
+        catch: (cause) =>
+          new PreviewError({
+            message: 'preview fonts unavailable',
+            status: 500,
+            cause,
+          }),
+      }),
+    );
+    const rendered = yield* Result.await(
+      Result.tryPromise({
+        try: async () => {
+          const background = cover === null ? fallbackBackground : blurredBackground(raw.song.cover, cover);
+
+          // Map BeatLeader data to the ReplayPreviewScore shape for the shared card
+          const data: ReplayPreviewScore = {
+            leaderboard: {
+              difficulty: { difficulty: raw.difficulty.value },
+              map: {
+                coverUrl: raw.song.cover,
+                levelAuthorName: raw.song.mapper,
+                songAuthorName: raw.song.author,
+                songName: raw.song.name,
+                songSubName: raw.song.subName,
+              },
+              realm: { stars: raw.difficulty.stars },
+            },
+            score: {
+              accuracy: raw.accuracy,
+              badCuts: raw.badCuts,
+              fullCombo: raw.fullCombo,
+              missedNotes: raw.missedNotes,
+              modifiedScore: raw.modifiedScore,
+              pp: raw.pp,
+              rank: raw.rank,
+              player: {
+                avatar: raw.player.avatar,
+                country: raw.player.country,
+                id: raw.player.id,
+                name: raw.player.name,
+              },
+            },
+          };
+          const player = {
+            id: raw.player.id,
+            name: raw.player.name,
+            avatar: raw.player.avatar,
+            country: raw.player.country,
+            rank: raw.player.rank > 0 ? raw.player.rank : undefined,
+            countryRank: raw.player.countryRank > 0 ? raw.player.countryRank : undefined,
+          };
+          const images: PreviewImages = {
+            background,
+            cover,
+            avatar,
+            flag,
+            logo,
+          };
+          const svg = await satori(
+            <ReplayPreviewCard
+              titleText="BeatLeader Replay"
+              accentColor="#f97316"
+              data={data}
+              player={player}
+              images={images}
+            />,
+            { ...previewSize, fonts, loadAdditionalAsset: loadFallbackAsset },
+          );
+          return Uint8Array.from(new Resvg(svg, { font: { loadSystemFonts: false } }).render().asPng()).buffer;
+        },
+        catch: (cause) =>
+          new PreviewError({
+            message: 'preview rendering failed',
+            status: 500,
+            cause,
+          }),
+      }),
+    );
+    cacheSet(replayPreviewCache, `bl:${scoreId}`, rendered, previewCacheLimit, previewTtlMs);
+    return Result.ok(rendered);
+  });
+}

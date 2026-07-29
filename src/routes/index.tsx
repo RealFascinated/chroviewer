@@ -6,6 +6,7 @@ import { Result } from 'better-result';
 import { viewerSearchSchema } from '../modules/viewer/viewer-search';
 import { getMapPreviewMetadata } from '../server/map-preview-metadata.functions';
 import { getPartyPreviewMetadata } from '../server/party-preview-metadata.functions';
+import { getBeatLeaderReplayPreviewTitle } from '../server/replay-preview-bl-metadata.functions';
 import { getReplayPreviewTitle } from '../server/replay-preview-metadata.functions';
 import { isViewerSourceEnabled } from '../sources/source-config';
 
@@ -71,6 +72,37 @@ export const Route = createFileRoute('/')({
         meta: [
           { title },
           { name: 'theme-color', content: '#facc15' },
+          { property: 'og:title', content: title },
+          { property: 'og:description', content: description },
+          { name: 'description', content: description },
+          { property: 'og:image', content: image },
+          { property: 'og:image:width', content: '1200' },
+          { property: 'og:image:height', content: '630' },
+          { property: 'og:image:type', content: 'image/png' },
+          { property: 'og:image:alt', content: alt },
+          { name: 'twitter:card', content: 'summary_large_image' },
+          { name: 'twitter:title', content: title },
+          { name: 'twitter:description', content: description },
+          { name: 'twitter:image', content: image },
+          { name: 'twitter:image:alt', content: alt },
+        ],
+      };
+    }
+
+    const scoreIdBL = match.search.scoreIdBL;
+    if (scoreIdBL !== undefined && isViewerSourceEnabled('beatleader')) {
+      const titleResult = await Result.tryPromise({
+        try: () => getBeatLeaderReplayPreviewTitle({ data: { scoreId: scoreIdBL } }),
+        catch: (cause) => cause,
+      });
+      const title = titleResult.isOk() ? titleResult.value : 'BeatLeader Replay';
+      const description = 'ChroViewer';
+      const image = new URL(`/api/preview/replay-bl?scoreId=${scoreIdBL}`, requestOrigin()).toString();
+      const alt = 'BeatLeader replay score card';
+      return {
+        meta: [
+          { title },
+          { name: 'theme-color', content: '#f97316' },
           { property: 'og:title', content: title },
           { property: 'og:description', content: description },
           { name: 'description', content: description },
