@@ -82,13 +82,11 @@ export function hitScoreTextRuns(value: string) {
     ) {
       previous.text += text;
     } else {
-      runs.push({
-        text,
-        scale,
-        ...(color === undefined ? {} : { color }),
-        ...(baselineOffset === undefined ? {} : { baselineOffset }),
-        ...(underline === undefined ? {} : { underline }),
-      });
+      const run: HitScoreTextRun = { text, scale };
+      if (color !== undefined) run.color = color;
+      if (baselineOffset !== undefined) run.baselineOffset = baselineOffset;
+      if (underline !== undefined) run.underline = underline;
+      runs.push(run);
     }
   }
   for (const match of value.matchAll(richTextTag)) {
@@ -257,7 +255,7 @@ export function decodeHitScoreVisualizer(payload: Uint8Array | undefined): HitSc
       misses,
       timePrecision,
       timeOffset,
-    } satisfies HitScoreVisualizerConfig;
+    };
   } catch {
     return null;
   }

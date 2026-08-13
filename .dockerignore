@@ -1,6 +1,8 @@
 *
-!bun.lock
 !package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!.node-version
 !public/**
 !src/**
 !tsconfig.json

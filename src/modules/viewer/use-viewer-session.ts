@@ -143,7 +143,7 @@ export function useViewerSession({
     settings.saberCoreThickness,
     settings.saberCoreInset,
     settings.showSaberTrails,
-    settings.replayTrailShape,
+    settings.replayTrailStyle,
     settings.replayTrailLength,
     settings.replayTrailThinness,
     settings.replayTrailSamples,

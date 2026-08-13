@@ -18,7 +18,7 @@ import svSeMessages from './messages/sv-SE.json';
 import zhCnMessages from './messages/zh-CN.json';
 import zhTwMessages from './messages/zh-TW.json';
 
-const messagesByLocale: Record<Locale, AbstractIntlMessages> = {
+const messagesByLocale = {
   en: enMessages,
   'de-DE': deDeMessages,
   'ja-JP': jaJpMessages,
@@ -50,6 +50,6 @@ function mergeMessage(
   base: string | AbstractIntlMessages,
   override: string | AbstractIntlMessages | undefined,
 ): string | AbstractIntlMessages {
-  if (typeof base === 'string') return typeof override === 'string' && override.trim() !== '' ? override : base;
-  return mergeMessages(base, typeof override === 'object' ? override : {});
+  if (base instanceof Object) return mergeMessages(base, override instanceof Object ? override : {});
+  return override === undefined || override instanceof Object || override.trim() === '' ? base : override;
 }
