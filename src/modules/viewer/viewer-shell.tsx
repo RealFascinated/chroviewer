@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'use-intl';
 
-import type { LightshowMode } from '../../core/lighting/basic-light';
+import { isForcedLightshowMode, type LightshowMode } from '../../core/lighting/basic-light';
 import { loadViewerSettings } from '../../core/viewer-settings';
 import { environmentCatalog } from '../../renderer/environment/environment-catalog';
 import { LudusPlayState } from '../live/generated/proto/scoresaber/live/v1/common_pb';
@@ -34,12 +34,12 @@ import {
   preserveLocalWatchPartyViewerSettings,
 } from '../watch-party/watch-party-viewer-settings';
 import { MapSummaryCard } from './components/map-summary-card';
+import { ReplayOrthoOverlay } from './components/replay-ortho-overlay';
 import { SourcePicker } from './components/source-picker';
 import { ViewerActions } from './components/viewer-actions';
 import { ViewerOverlay } from './components/viewer-overlay';
 import { buildTimelineMarkers } from './timeline-markers';
 import { TransportControls } from './transport/transport-controls';
-import { useFavicon } from './use-favicon';
 import { useSongTransport } from './use-song-transport';
 import { useViewerControls } from './use-viewer-controls';
 import { useViewerSession } from './use-viewer-session';
@@ -142,16 +142,6 @@ export function ViewerShell() {
           watcherPlayerId: search.watcherPlayerId,
           authToken: search.authToken,
         };
-  const isBeatLeaderReplay =
-    sources.shareScoreIdBL !== null || sources.replayRef.current?.metadata.version.includes('BeatLeader') === true;
-  const faviconPlatform = isBeatLeaderReplay
-    ? 'beatleader'
-    : liveTarget !== null || sources.shareScoreId !== null
-      ? 'scoresaber'
-      : sources.mapIdentity !== null
-        ? 'beatsaver'
-        : 'default';
-  useFavicon(faviconPlatform);
   const liveActive = liveTarget !== null;
   const remoteActive = liveActive || partyActive;
   const live = useLiveExperience({
@@ -373,6 +363,8 @@ export function ViewerShell() {
             : !partyIsHost && party.mapReady && party.serverState?.mapRevealed !== true
               ? { icon: UsersRound, iconClassName: '', label: partyT('waitingForHostStart') }
               : null;
+  const sourcePickerVisible =
+    sources.mapMeta === null && !remoteActive && !sources.sourceLoading && !session.environmentLoading;
   const playbackOverlay = remoteActive
     ? null
     : sources.sourceLoading
@@ -439,7 +431,8 @@ export function ViewerShell() {
         <canvas
           ref={session.canvasRef}
           className={cn(
-            'absolute inset-0 size-full',
+            'absolute inset-0 size-full transition-[filter,transform] duration-500',
+            sourcePickerVisible && 'scale-[1.01] blur-[3px]',
             partyActive && !partyIsHost && !(party.mapReady && party.serverState?.mapRevealed === true) && 'invisible',
           )}
           onPointerDown={() => {
@@ -452,6 +445,20 @@ export function ViewerShell() {
           }}
         />
       </div>
+
+      {settings.orthoCameraEnabled &&
+        sources.replayRef.current !== null &&
+        session.selectedKey !== '' &&
+        !isForcedLightshowMode(lightshowMode) &&
+        (!partyActive || (party.mapReady && (partyIsHost || party.serverState?.mapRevealed === true))) && (
+          <ReplayOrthoOverlay
+            overlayRef={session.orthoOverlayRef}
+            view={settings.orthoCameraView}
+            onViewChange={(orthoCameraView) => {
+              setSettings((current) => ({ ...current, orthoCameraView }));
+            }}
+          />
+        )}
 
       {liveActive && liveInterruption !== null && (
         <ViewerOverlay
@@ -530,9 +537,12 @@ export function ViewerShell() {
       <SourcePicker
         choices={sources.sourceChoices}
         input={sources.sourceInput}
-        visible={sources.mapMeta === null && !remoteActive && !sources.sourceLoading && !session.environmentLoading}
+        visible={sourcePickerVisible}
         onChoose={(choice) => {
           sources.loadLookup(choice);
+        }}
+        onAboutClick={() => {
+          setActivePanel('about');
         }}
         onInputChange={sources.setSourceInput}
         onOpenFiles={() => {
@@ -643,6 +653,8 @@ export function ViewerShell() {
       )}
 
       <ViewerActions
+        aboutOpen={activePanel === 'about'}
+        aboutTriggerVisible={!sourcePickerVisible}
         chromeVisible={chromeVisible}
         hasMap={showMapCard}
         shareEnabled={!partyActive}
@@ -651,16 +663,15 @@ export function ViewerShell() {
         shareIncludeTimecode={share.includeTimecode}
         shareOpen={activePanel === 'share'}
         shareUrl={share.shareUrl}
-        shortcutsOpen={activePanel === 'shortcuts'}
+        onAboutOpenChange={(open) => {
+          setActivePanel(open ? 'about' : null);
+        }}
         onCopyShare={share.copyShareLink}
         onSettingsClick={toggleSettings}
         onShareCategoriesChange={share.setShareCategories}
         onShareIncludeTimecodeChange={share.setIncludeTimecode}
         onShareOpenChange={(open) => {
           setActivePanel(open ? 'share' : null);
-        }}
-        onShortcutsOpenChange={(open) => {
-          setActivePanel(open ? 'shortcuts' : null);
         }}
       />
 
@@ -690,6 +701,7 @@ export function ViewerShell() {
             lightshowMode={lightshowMode}
             lightshowReadOnly={partyActive && !partyIsHost}
             replayCamera={settings.replayCamera}
+            orthoCameraEnabled={settings.orthoCameraEnabled}
             hasReplay={sources.replayRef.current !== null}
             songMuted={settings.songMuted}
             masterMuted={settings.masterMuted}
@@ -720,6 +732,9 @@ export function ViewerShell() {
             onLightshowModeChange={session.changeLightshowMode}
             onReplayCameraChange={(replayCamera) => {
               setSettings({ ...settings, replayCamera });
+            }}
+            onOrthoCameraEnabledChange={(orthoCameraEnabled) => {
+              setSettings((current) => ({ ...current, orthoCameraEnabled }));
             }}
             onMasterVolumeChange={(masterVolume) => {
               if (settingsRef.current.masterVolume === 0 && masterVolume > 0) void transport.unlockAudio();

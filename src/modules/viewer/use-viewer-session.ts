@@ -69,7 +69,7 @@ export function useViewerSession({
   const selectionRequestRef = useRef(0);
   const selectionGenerationRef = useRef(0);
   const [selectedKey, setSelectedKey] = useState('');
-  const { canvasRef, environmentLoading, viewerReady, viewerRef } = useViewerRenderer({
+  const { canvasRef, environmentLoading, orthoOverlayRef, viewerReady, viewerRef } = useViewerRenderer({
     activeSelectionRef,
     clockRef: transport.clockRef,
     lightshowModeRef,
@@ -115,6 +115,9 @@ export function useViewerSession({
   useEffect(() => {
     viewerRef.current?.view.setReplayCameraSettings(settings);
   }, [
+    settings.showHeadset,
+    settings.orthoCameraEnabled,
+    settings.orthoCameraView,
     settings.replayCamera,
     settings.replayCameraSmoothing,
     settings.replayCameraSmoothingSpeed,
@@ -259,6 +262,7 @@ export function useViewerSession({
       initialPlayerHeight: sources.replayRef.current?.metadata.initialHeight,
       replayHeights: sources.replayRef.current?.heights,
       environmentRemoval: row.infoDifficulty.environmentRemoval,
+      modifiers: sources.replayRef.current?.metadata.modifiers,
     });
     const environmentResult = await viewer.view.setEnvironment(environmentId, data.chromaEnvironment);
     if (environmentResult.isErr()) {
@@ -451,6 +455,7 @@ export function useViewerSession({
     environmentLoading,
     leaderboardUrl,
     leaderboardPlatform,
+    orthoOverlayRef,
     selectDifficulty,
     selectedDifficultyIndex,
     selectedKey,

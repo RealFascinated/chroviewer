@@ -2,20 +2,7 @@
 node_modules
 
 # output
-out
-dist
 .output
-*.tgz
-/*.webm
-
-# code coverage
-coverage
-*.lcov
-
-# logs
-logs
-_.log
-report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # dotenv environment variable files
 .env*
@@ -25,15 +12,5 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 BeatSaber-Web-Replays/
 
 # caches
-.eslintcache
-.cache
 .tanstack/
 *.tsbuildinfo
-__pycache__/
-*.py[cod]
-
-# IntelliJ based IDEs
-.idea
-
-# Finder (MacOS) folder config
-.DS_Store
