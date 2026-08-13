@@ -286,6 +286,7 @@
   "viewer": {
     "actions": "Viewer actions",
     "dismissError": "Dismiss error",
+    "difficultyLoading": "Preparing difficulty",
     "downloadingReplay": "Downloading replay",
     "liveBuffering": "Ludus syncing...",
     "liveConnecting": "Connecting to ludus...",

@@ -60,8 +60,5 @@
     "node": ">=24.15.0 <25",
     "pnpm": ">=11.20.0 <12"
   },
-  "packageManager": "pnpm@11.20.0",
-  "patchedDependencies": {
-    "@tanstack/react-router@1.170.18": "patches/@tanstack%2Freact-router@1.170.18.patch"
-  }
+  "packageManager": "pnpm@11.20.0"
 }

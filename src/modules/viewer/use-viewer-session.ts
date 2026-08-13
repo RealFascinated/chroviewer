@@ -47,7 +47,7 @@ interface ViewerSessionOptions {
     | 'songBpm'
     | 'shareScoreIdBL'
   >;
-  transport: Pick<SongTransport, 'clockRef' | 'load' | 'play' | 'seek' | 'setHitsoundEvents'>;
+  transport: Pick<SongTransport, 'clear' | 'clockRef' | 'load' | 'play' | 'seek' | 'setHitsoundEvents'>;
 }
 
 export function useViewerSession({
@@ -68,6 +68,7 @@ export function useViewerSession({
   const activeSelectionRef = useRef<ActiveSelection | null>(null);
   const selectionRequestRef = useRef(0);
   const selectionGenerationRef = useRef(0);
+  const [difficultyLoading, setDifficultyLoading] = useState(false);
   const [selectedKey, setSelectedKey] = useState('');
   const { canvasRef, environmentLoading, orthoOverlayRef, viewerReady, viewerRef } = useViewerRenderer({
     activeSelectionRef,
@@ -225,6 +226,7 @@ export function useViewerSession({
 
   async function selectDifficulty(row: DifficultyRow, initialBeat = 0) {
     const requestId = ++selectionRequestRef.current;
+    setDifficultyLoading(false);
     const viewer = viewerRef.current;
     if (
       viewer === null ||
@@ -248,6 +250,12 @@ export function useViewerSession({
       return;
     }
 
+    setDifficultyLoading(true);
+    await new Promise<void>((resolve) => {
+      window.setTimeout(resolve, 0);
+    });
+    if (requestId !== selectionRequestRef.current) return;
+
     const data = buildMapRenderData(row.difficulty, {
       noteJumpSpeed: effectiveNoteJumpSpeed(row.infoDifficulty),
       noteStartBeatOffset: row.infoDifficulty.noteStartBeatOffset,
@@ -264,9 +272,32 @@ export function useViewerSession({
       environmentRemoval: row.infoDifficulty.environmentRemoval,
       modifiers: sources.replayRef.current?.metadata.modifiers,
     });
+    const hitsoundEvents = buildHitsoundEvents([...data.notes, ...data.chainLinks], sources.songBpm);
+    const replayEnd = sources.replayRef.current?.poses.at(-1)?.time ?? 0;
+    const fallbackDuration = Math.max(songBpmTimeToSeconds(data.endBeat, sources.songBpm) + 1, replayEnd);
+    const clockPromise =
+      transport.clockRef.current === null
+        ? transport.load({
+            audioData: sources.audioDataRef.current,
+            fallbackDuration,
+            hitsoundEvents,
+            onAudioDecodeError() {
+              setError(t('errors.audioDecode'));
+            },
+            shouldCommit() {
+              return requestId === selectionRequestRef.current;
+            },
+            songBpm: sources.songBpm,
+            volume: settings.masterMuted || settings.songMuted ? 0 : settings.masterVolume * settings.songVolume,
+          })
+        : null;
     const environmentResult = await viewer.view.setEnvironment(environmentId, data.chromaEnvironment);
     if (environmentResult.isErr()) {
       if (requestId >= selectionGenerationRef.current) reportEnvironmentError(environmentResult.error);
+      if (requestId === selectionRequestRef.current) {
+        if (clockPromise !== null) transport.clear();
+        setDifficultyLoading(false);
+      }
       return;
     }
     if (requestId < selectionGenerationRef.current) return;
@@ -283,7 +314,6 @@ export function useViewerSession({
       mapColorScheme: row.colorScheme,
     };
 
-    const hitsoundEvents = buildHitsoundEvents([...data.notes, ...data.chainLinks], sources.songBpm);
     const currentReplayHeights = sources.replayRef.current?.heights ?? [];
     applyReplayHeightEvents(data, currentReplayHeights.slice(data.replayHeights.length));
     viewer.view.setBeatSource(() => initialBeat);
@@ -296,30 +326,20 @@ export function useViewerSession({
     setActivePanel(null);
 
     let clock = transport.clockRef.current;
-    if (clock === null) {
-      const replayEnd = sources.replayRef.current?.poses.at(-1)?.time ?? 0;
-      const fallbackDuration = Math.max(songBpmTimeToSeconds(data.endBeat, sources.songBpm) + 1, replayEnd);
-      clock = await transport.load({
-        audioData: sources.audioDataRef.current,
-        fallbackDuration,
-        hitsoundEvents,
-        onAudioDecodeError() {
-          setError(t('errors.audioDecode'));
-        },
-        shouldCommit() {
-          return generation === selectionGenerationRef.current;
-        },
-        songBpm: sources.songBpm,
-        volume: settings.masterMuted || settings.songMuted ? 0 : settings.masterVolume * settings.songVolume,
-      });
-      if (clock === null || generation !== selectionGenerationRef.current) return;
+    if (clockPromise !== null) {
+      clock = await clockPromise;
     } else {
       transport.setHitsoundEvents(hitsoundEvents);
+    }
+    if (clock === null || generation !== selectionGenerationRef.current) {
+      if (requestId === selectionRequestRef.current) setDifficultyLoading(false);
+      return;
     }
 
     viewer.view.setSongDuration(clock.duration);
     viewer.view.setBeatSource(() => clock.currentBeat());
     setSelectedKey(row.key);
+    if (requestId === selectionRequestRef.current) setDifficultyLoading(false);
     return true;
   }
 
@@ -366,6 +386,7 @@ export function useViewerSession({
   function clearViewer() {
     selectionGenerationRef.current = ++selectionRequestRef.current;
     activeSelectionRef.current = null;
+    setDifficultyLoading(false);
     setSelectedKey('');
     viewerRef.current?.view.clear();
   }
@@ -452,6 +473,7 @@ export function useViewerSession({
     cycleCamera,
     cycleLights,
     difficultyOptions,
+    difficultyLoading,
     environmentLoading,
     leaderboardUrl,
     leaderboardPlatform,
