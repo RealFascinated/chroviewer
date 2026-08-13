@@ -99,14 +99,14 @@ export function hitScoreTextRuns(value: string) {
       if (sizes.length > 1) sizes.pop();
     } else {
       const size = /^size\s*=\s*["']?([\d.]+)(%)?["']?$/i.exec(tag);
-      const color = /^color\s*=\s*["']?(#[\da-f]{3,8}|[a-z]+)["']?$/i.exec(tag);
+      const color = /^(?:color\s*=\s*["']?(#[\da-f]{3,8}|[a-z]+)["']?|(#[\da-f]{3,8}))$/i.exec(tag);
       if (size !== null) {
         const value = Number(size[1]);
         sizes.push(size[2] === '%' ? ((sizes.at(-1) ?? 1) * value) / 100 : value === 0 ? 0 : (sizes.at(-1) ?? 1));
       } else if (/^\/color$/i.test(tag)) {
         if (colors.length > 1) colors.pop();
       } else if (color !== null) {
-        colors.push(color[1]);
+        colors.push(color[1] ?? color[2]);
       } else if (/^sup$/i.test(tag)) {
         const current = scripts.at(-1) ?? scripts[0];
         if (current !== undefined)
