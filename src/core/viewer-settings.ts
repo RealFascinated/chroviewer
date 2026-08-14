@@ -39,7 +39,7 @@ export interface ViewerSettings {
   saberCoreThickness: number;
   saberCoreInset: number;
   showSaberTrails: boolean;
-  replayTrailShape: 'flag' | 'rectangle';
+  replayTrailStyle: 'flag' | 'rectangle';
   replayTrailLength: number;
   replayTrailThinness: number;
   replayTrailSamples: number;
@@ -126,7 +126,7 @@ export type ReplayCameraSettings = Pick<
 export type ReplayTrailSettings = Pick<
   ViewerSettings,
   | 'showSaberTrails'
-  | 'replayTrailShape'
+  | 'replayTrailStyle'
   | 'replayTrailLength'
   | 'replayTrailThinness'
   | 'replayTrailSamples'
@@ -144,7 +144,7 @@ export type ReplaySaberSettings = Pick<
   | 'saberCoreThickness'
   | 'saberCoreInset'
   | 'showSaberTrails'
-  | 'replayTrailShape'
+  | 'replayTrailStyle'
   | 'replayTrailLength'
   | 'replayTrailThinness'
   | 'replayTrailSamples'
@@ -193,7 +193,7 @@ export const DEFAULT_REPLAY_CAMERA_SETTINGS: ReplayCameraSettings = {
 
 export const DEFAULT_REPLAY_TRAIL_SETTINGS: ReplayTrailSettings = {
   showSaberTrails: true,
-  replayTrailShape: 'flag',
+  replayTrailStyle: 'flag',
   replayTrailLength: 0.331,
   replayTrailThinness: 0,
   replayTrailSamples: 18,
@@ -275,8 +275,9 @@ export const DEFAULT_VIEWER_SETTINGS: ViewerSettings = {
   keepMapInfoVisible: false,
 };
 
-const storageKey = 'chroviewer.settings.v8';
-const previousStorageKey = 'chroviewer.settings.v7';
+const storageKey = 'chroviewer.settings.v9';
+const previousStorageKey = 'chroviewer.settings.v8';
+const v7StorageKey = 'chroviewer.settings.v7';
 const v6StorageKey = 'chroviewer.settings.v6';
 const incorrectColorStorageKey = 'chroviewer.settings.v5';
 const olderStorageKey = 'chroviewer.settings.v4';
@@ -357,7 +358,7 @@ const viewerSettingsObjectSchema = z.object({
   saberCoreThickness: numberSetting(DEFAULT_VIEWER_SETTINGS.saberCoreThickness, 0.0005, 0.02),
   saberCoreInset: numberSetting(DEFAULT_VIEWER_SETTINGS.saberCoreInset, 0, 0.2),
   showSaberTrails: z.catch(z.boolean(), DEFAULT_VIEWER_SETTINGS.showSaberTrails),
-  replayTrailShape: z.catch(z.enum(['flag', 'rectangle']), DEFAULT_VIEWER_SETTINGS.replayTrailShape),
+  replayTrailStyle: z.catch(z.enum(['flag', 'rectangle']), DEFAULT_VIEWER_SETTINGS.replayTrailStyle),
   replayTrailLength: numberSetting(DEFAULT_VIEWER_SETTINGS.replayTrailLength, 0.02, 1.5),
   replayTrailThinness: numberSetting(DEFAULT_VIEWER_SETTINGS.replayTrailThinness, 0, 0.95),
   replayTrailSamples: integerSetting(DEFAULT_VIEWER_SETTINGS.replayTrailSamples, 2, 128),
@@ -417,18 +418,58 @@ const viewerSettingsObjectSchema = z.object({
 });
 
 const viewerSettingsSchema = z.catch(viewerSettingsObjectSchema, DEFAULT_VIEWER_SETTINGS);
-export const viewerSettingsPatchSchema = z.partial(viewerSettingsObjectSchema);
+const viewerSettingsPatchObjectSchema = z.partial(viewerSettingsObjectSchema);
+const legacyReplayTrailProperty = 'replayTrailShape';
+const legacyReplayTrailFields = {
+  [legacyReplayTrailProperty]: z.optional(z.enum(['flag', 'rectangle'])),
+};
+const legacyReplayTrailSchema = z.pipe(
+  z.object(legacyReplayTrailFields),
+  z.transform((value) => Object.values(value)[0]),
+);
+const viewerSettingsPatchInputSchema = z.extend(viewerSettingsPatchObjectSchema, legacyReplayTrailFields);
+export const viewerSettingsPatchSchema = z.pipe(
+  viewerSettingsPatchInputSchema,
+  z.transform((value) => {
+    const settings = z.parse(viewerSettingsPatchObjectSchema, value);
+    const legacyStyle = z.parse(legacyReplayTrailSchema, value);
+    if (settings.replayTrailStyle === undefined && legacyStyle !== undefined) {
+      settings.replayTrailStyle = legacyStyle;
+    }
+    return settings;
+  }),
+);
 
-export function sanitizeViewerSettings(value: unknown): ViewerSettings {
+type ViewerSettingsInput = Parameters<typeof viewerSettingsSchema.parse>[0];
+
+export function sanitizeViewerSettings(value: ViewerSettingsInput): ViewerSettings {
   return z.parse(viewerSettingsSchema, value);
 }
 
+function sanitizeLegacyViewerSettings(value: ViewerSettingsInput) {
+  const settings = sanitizeViewerSettings(value);
+  const legacyStyle = z.parse(legacyReplayTrailSchema, value);
+  if (legacyStyle !== undefined) settings.replayTrailStyle = legacyStyle;
+  return settings;
+}
+
+const browserMobileDevice = z.safeParse(
+  z.object({ userAgent: z.string(), maxTouchPoints: z.number() }),
+  globalThis.navigator,
+);
+
 export function isMobileDevice(
-  device: MobileDeviceInfo | undefined = typeof navigator === 'undefined' ? undefined : navigator,
+  device: MobileDeviceInfo | undefined = browserMobileDevice.success ? browserMobileDevice.data : undefined,
 ) {
   if (device === undefined) return false;
   return (
     mobileUserAgent.test(device.userAgent) || (device.maxTouchPoints > 1 && device.userAgent.includes('Macintosh'))
+  );
+}
+
+function parseStoredViewerSettings(text: string, legacy = false) {
+  return Result.try(() =>
+    legacy ? sanitizeLegacyViewerSettings(JSON.parse(text)) : sanitizeViewerSettings(JSON.parse(text)),
   );
 }
 
@@ -441,50 +482,57 @@ export function loadViewerSettings(
     : DEFAULT_VIEWER_SETTINGS;
   const text = storage.getItem(storageKey);
   if (text !== null) {
-    const parsed = Result.try((): unknown => JSON.parse(text));
-    return parsed.isOk() ? sanitizeViewerSettings(parsed.value) : defaults;
+    const parsed = parseStoredViewerSettings(text);
+    return parsed.isOk() ? parsed.value : defaults;
   }
 
   const previousText = storage.getItem(previousStorageKey);
   if (previousText !== null) {
-    const parsed = Result.try((): unknown => JSON.parse(previousText));
+    const parsed = parseStoredViewerSettings(previousText, true);
     if (parsed.isErr()) return defaults;
-    return sanitizeViewerSettings(parsed.value);
+    return parsed.value;
+  }
+
+  const v7Text = storage.getItem(v7StorageKey);
+  if (v7Text !== null) {
+    const parsed = parseStoredViewerSettings(v7Text, true);
+    if (parsed.isErr()) return defaults;
+    return parsed.value;
   }
 
   const v6Text = storage.getItem(v6StorageKey);
   if (v6Text !== null) {
-    const parsed = Result.try((): unknown => JSON.parse(v6Text));
+    const parsed = parseStoredViewerSettings(v6Text, true);
     if (parsed.isErr()) return defaults;
-    return resetSaberModel(sanitizeViewerSettings(parsed.value));
+    return resetSaberModel(parsed.value);
   }
 
   const incorrectColorText = storage.getItem(incorrectColorStorageKey);
   if (incorrectColorText !== null) {
-    const parsed = Result.try((): unknown => JSON.parse(incorrectColorText));
+    const parsed = parseStoredViewerSettings(incorrectColorText, true);
     if (parsed.isErr()) return defaults;
-    return resetSaberSettings(migrateIncorrectDefaultColors(sanitizeViewerSettings(parsed.value)));
+    return resetSaberSettings(migrateIncorrectDefaultColors(parsed.value));
   }
 
   const olderText = storage.getItem(olderStorageKey);
   if (olderText !== null) {
-    const parsed = Result.try((): unknown => JSON.parse(olderText));
+    const parsed = parseStoredViewerSettings(olderText, true);
     if (parsed.isErr()) return defaults;
-    return resetSaberSettings(migrateLegacyColorOverrides(sanitizeViewerSettings(parsed.value)));
+    return resetSaberSettings(migrateLegacyColorOverrides(parsed.value));
   }
 
   const legacyText = storage.getItem(legacyStorageKey);
   if (legacyText !== null) {
-    const parsed = Result.try((): unknown => JSON.parse(legacyText));
+    const parsed = parseStoredViewerSettings(legacyText, true);
     if (parsed.isErr()) return defaults;
-    return resetSaberSettings(migrateLegacyColorOverrides(sanitizeViewerSettings(parsed.value)));
+    return resetSaberSettings(migrateLegacyColorOverrides(parsed.value));
   }
 
   const oldestText = storage.getItem(oldestStorageKey);
   if (oldestText !== null) {
-    const parsed = Result.try((): unknown => JSON.parse(oldestText));
+    const parsed = parseStoredViewerSettings(oldestText, true);
     if (parsed.isErr()) return defaults;
-    const settings = resetSaberSettings(migrateLegacyColorOverrides(sanitizeViewerSettings(parsed.value)));
+    const settings = resetSaberSettings(migrateLegacyColorOverrides(parsed.value));
     return settings.graphicsQuality === 'medium'
       ? { ...settings, graphicsQuality: defaults.graphicsQuality }
       : settings;
@@ -492,9 +540,9 @@ export function loadViewerSettings(
 
   const originalText = storage.getItem(originalStorageKey);
   if (originalText === null) return defaults;
-  const parsed = Result.try((): unknown => JSON.parse(originalText));
+  const parsed = parseStoredViewerSettings(originalText, true);
   if (parsed.isErr()) return defaults;
-  const settings = resetSaberSettings(migrateLegacyColorOverrides(sanitizeViewerSettings(parsed.value)));
+  const settings = resetSaberSettings(migrateLegacyColorOverrides(parsed.value));
   return settings.graphicsQuality === 'high' ? { ...settings, graphicsQuality: defaults.graphicsQuality } : settings;
 }
 

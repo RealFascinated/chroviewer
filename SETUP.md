@@ -8,45 +8,43 @@ If you haven't already, we strongly urge y'all to harden your shell environment 
 
 ## Requirements
 
-### Package Manager
+### Vite+
 
-Use the Bun version pinned by `packageManager` in `package.json`. Install Bun with:
+Install the Vite+ CLI, which provisions the Node and pnpm versions pinned by this project:
 
 Linux and macOS:
 
 ```sh
-curl -fsSL https://bun.sh/install | bash
+curl -fsSL https://vite.plus | bash
 ```
 
 Windows:
 
 ```sh
-powershell -c "irm bun.sh/install.ps1 | iex"
+powershell -c "irm https://vite.plus/ps1 | iex"
 ```
 
-### Runtime
-
-Use the exact Node version in `.node-version`
-
-We recommend [nvm](https://github.com/nvm-sh/nvm#installing-and-updating). From the project root:
+If you already have the pnpm version pinned in `package.json`, Vite+ doesn't need to be installed globally:
 
 ```sh
-nvm install "$(cat .node-version)"
-nvm use "$(cat .node-version)"
+pnpm install
+pnpm exec vp dev
 ```
+
+`pnpm install` installs the project-local Vite+ CLI. The global CLI is recommended because it also manages the pinned Node and pnpm versions
 
 ## Run ChroViewer
 
 Install dependencies:
 
 ```sh
-bun i
+vp install
 ```
 
 Start the development server:
 
 ```sh
-bun run dev
+vp dev
 ```
 
 Vite prints the local URL when the server starts
@@ -63,24 +61,30 @@ VITE_ENABLED_SOURCES=beatsaver,scoresaber,beatleader
 
 ## Checks
 
-Run the full local check with:
+Run formatting, linting and type-checking with:
 
 ```sh
-bun run check
+vp check
 ```
 
-This checks formatting, generated API contracts, TypeScript, linting, tests, environment assets and the production build
+Run the complete validation suite with:
+
+```sh
+vp run verify
+```
+
+This also checks generated API contracts and Protobuf files and creates a production build
 
 ## Production Build
 
 Build and run the production server locally:
 
 ```sh
-bun run build
-bun run start
+vp build
+vp run start
 ```
 
-`bun run start` serves on port `4000`
+`vp run start` serves on port `4000`
 
 You can also build the production container:
 

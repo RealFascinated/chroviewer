@@ -360,7 +360,7 @@ export class MapView implements RenderView {
 
   private baseProvider(name: string, beat: number): readonly number[] | undefined {
     const data = this.data;
-    const color = (value: Rgb) => [value[0], value[1], value[2], 1] as const;
+    const color = (value: Rgb): readonly [number, number, number, number] => [value[0], value[1], value[2], 1];
     const colors = this.colors;
     if (name === 'baseNote0Color') return color(data?.leftHanded === true ? colors.rightNote : colors.leftNote);
     if (name === 'baseNote1Color') return color(data?.leftHanded === true ? colors.leftNote : colors.rightNote);

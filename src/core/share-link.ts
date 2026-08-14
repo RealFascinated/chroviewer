@@ -47,7 +47,7 @@ export function settingsForShareCategories(
       saberCoreThickness: settings.saberCoreThickness,
       saberCoreInset: settings.saberCoreInset,
       showSaberTrails: settings.showSaberTrails,
-      replayTrailShape: settings.replayTrailShape,
+      replayTrailStyle: settings.replayTrailStyle,
       replayTrailLength: settings.replayTrailLength,
       replayTrailThinness: settings.replayTrailThinness,
       replayTrailSamples: settings.replayTrailSamples,

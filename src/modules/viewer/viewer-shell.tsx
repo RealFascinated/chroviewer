@@ -377,27 +377,29 @@ export function ViewerShell() {
               : t('liveDownloadingMap'),
           progress: sources.sourceDownload?.progress ?? null,
         }
-      : session.environmentLoading
-        ? { icon: LoaderCircle, iconClassName: 'animate-spin', label: t('environmentLoading') }
-        : session.selectedKey !== '' && transport.ended
-          ? {
-              actionLabel: commonT('replay'),
-              icon: RotateCcw,
-              label: commonT('replay'),
-              onAction: () => {
-                transport.togglePlay();
-              },
-            }
-          : session.selectedKey !== '' && !transport.started
+      : session.difficultyLoading
+        ? { icon: LoaderCircle, iconClassName: '', label: t('difficultyLoading') }
+        : session.environmentLoading
+          ? { icon: LoaderCircle, iconClassName: 'animate-spin', label: t('environmentLoading') }
+          : session.selectedKey !== '' && transport.ended
             ? {
-                actionLabel: commonT('play'),
-                icon: Play,
-                label: commonT('play'),
+                actionLabel: commonT('replay'),
+                icon: RotateCcw,
+                label: commonT('replay'),
                 onAction: () => {
                   transport.togglePlay();
                 },
               }
-            : null;
+            : session.selectedKey !== '' && !transport.started
+              ? {
+                  actionLabel: commonT('play'),
+                  icon: Play,
+                  label: commonT('play'),
+                  onAction: () => {
+                    transport.togglePlay();
+                  },
+                }
+              : null;
   const viewportStyle: CSSProperties &
     Record<
       '--live-keyboard-inset' | '--live-mobile-chat-height' | '--live-safe-area-bottom' | '--live-viewport-center-y',
