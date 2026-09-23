@@ -567,7 +567,6 @@ export function useViewerRemoteSource({
     }
     pendingSharedViewRef.current = {
       autoplay: search.autoplay,
-      difficultyIndex: search.difficulty,
       beat: search.beat,
     };
     setSourceInput(search.map);
