@@ -3,22 +3,10 @@ import { tanstackStart } from '@tanstack/react-start/plugin/vite';
 import viteReact from '@vitejs/plugin-react';
 import rsc from '@vitejs/plugin-rsc';
 import { nitro } from 'nitro/vite';
-import { defineConfig, loadEnv, lazyPlugins } from 'vite-plus';
-
-import { enabledViewerSourcesSchema } from './src/sources/source-options';
-
-const sourceFrameAncestors = {
-  beatsaver: ['https://beatsaver.com'],
-  scoresaber: ['https://scoresaber.com'],
-  beatleader: ['https://beatleader.com', 'https://beatleader.xyz'],
-};
+import { defineConfig, lazyPlugins } from 'vite-plus';
 
 export default defineConfig(({ mode }) => {
-  const enabledSources = enabledViewerSourcesSchema.parse(loadEnv(mode, process.cwd(), 'VITE_').VITE_ENABLED_SOURCES);
   const securityHeaders = {
-    'content-security-policy': `frame-ancestors 'self' ${enabledSources
-      .flatMap((source) => sourceFrameAncestors[source])
-      .join(' ')}`,
     'referrer-policy': 'strict-origin-when-cross-origin',
     'x-content-type-options': 'nosniff',
   };
