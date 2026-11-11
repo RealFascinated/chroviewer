@@ -71,7 +71,7 @@ export function SourcePicker({
     <>
       {visible && (
         <Card
-          className="bg-card/65 fixed top-1/2 left-1/2 z-20 w-[min(34rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-hidden border-white/15 p-5 shadow-2xl shadow-black/35 backdrop-blur-2xl"
+          className="bg-card/65 fixed top-1/2 left-1/2 z-20 w-[min(42rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-hidden border-white/15 p-5 shadow-2xl shadow-black/35 backdrop-blur-2xl"
           role="group"
           aria-label={t('loadGroup')}
         >
@@ -98,7 +98,7 @@ export function SourcePicker({
           >
             {isViewerSourceEnabled('beatsaver') && (
               <ToggleGroupItem
-                className="data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:hover:bg-background h-9 min-w-0 gap-1.5 px-2 text-sm hover:bg-white/10 data-[state=on]:shadow-sm sm:gap-2"
+                className="data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:hover:bg-background h-9 gap-1.5 px-2 text-sm hover:bg-white/10 data-[state=on]:shadow-sm sm:gap-2"
                 value="beatsaver"
                 aria-label={t('beatsaver')}
               >
@@ -108,12 +108,12 @@ export function SourcePicker({
                   alt=""
                   aria-hidden="true"
                 />
-                <span className="hidden min-w-0 truncate sm:block">{t('beatsaver')}</span>
+                <span className="hidden sm:inline">{t('beatsaver')}</span>
               </ToggleGroupItem>
             )}
             {isViewerSourceEnabled('scoresaber') && (
               <ToggleGroupItem
-                className="data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:hover:bg-background h-9 min-w-0 gap-1.5 px-2 text-sm hover:bg-white/10 data-[state=on]:shadow-sm sm:gap-2"
+                className="data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:hover:bg-background h-9 gap-1.5 px-2 text-sm hover:bg-white/10 data-[state=on]:shadow-sm sm:gap-2"
                 value="scoresaber"
                 aria-label={t('scoresaber')}
               >
@@ -123,12 +123,12 @@ export function SourcePicker({
                   alt=""
                   aria-hidden="true"
                 />
-                <span className="hidden min-w-0 truncate sm:block">{t('scoresaber')}</span>
+                <span className="hidden sm:inline">{t('scoresaber')}</span>
               </ToggleGroupItem>
             )}
             {isViewerSourceEnabled('beatleader') && (
               <ToggleGroupItem
-                className="data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:hover:bg-background h-9 min-w-0 gap-1.5 px-2 text-sm hover:bg-white/10 data-[state=on]:shadow-sm sm:gap-2"
+                className="data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:hover:bg-background h-9 gap-1.5 px-2 text-sm hover:bg-white/10 data-[state=on]:shadow-sm sm:gap-2"
                 value="beatleader"
                 aria-label={t('beatleader')}
               >
@@ -138,12 +138,12 @@ export function SourcePicker({
                   alt=""
                   aria-hidden="true"
                 />
-                <span className="hidden min-w-0 truncate sm:block">{t('beatleader')}</span>
+                <span className="hidden sm:inline">{t('beatleader')}</span>
               </ToggleGroupItem>
             )}
             {isViewerSourceEnabled('ssr') && (
               <ToggleGroupItem
-                className="data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:hover:bg-background h-9 min-w-0 gap-1.5 px-2 text-sm hover:bg-white/10 data-[state=on]:shadow-sm sm:gap-2"
+                className="data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:hover:bg-background h-9 gap-1.5 px-2 text-sm hover:bg-white/10 data-[state=on]:shadow-sm sm:gap-2"
                 value="ssr"
                 aria-label={t('ssr')}
               >
@@ -153,16 +153,16 @@ export function SourcePicker({
                   alt=""
                   aria-hidden="true"
                 />
-                <span className="hidden min-w-0 truncate sm:block">{t('ssr')}</span>
+                <span className="hidden sm:inline">{t('ssr')}</span>
               </ToggleGroupItem>
             )}
             <ToggleGroupItem
-              className="data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:hover:bg-background h-9 min-w-0 gap-1.5 px-2 text-sm hover:bg-white/10 data-[state=on]:shadow-sm sm:gap-2"
+              className="data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:hover:bg-background h-9 gap-1.5 px-2 text-sm hover:bg-white/10 data-[state=on]:shadow-sm sm:gap-2"
               value="link"
               aria-label={t('link')}
             >
               <LinkIcon className="size-4 sm:size-5" />
-              <span className="hidden min-w-0 truncate sm:block">{t('link')}</span>
+              <span className="hidden sm:inline">{t('link')}</span>
             </ToggleGroupItem>
           </ToggleGroup>
           <form
