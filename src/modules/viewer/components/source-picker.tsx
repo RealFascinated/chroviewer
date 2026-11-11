@@ -98,7 +98,7 @@ export function SourcePicker({
           >
             {isViewerSourceEnabled('beatsaver') && (
               <ToggleGroupItem
-                className="data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:hover:bg-background h-9 gap-1.5 px-2 text-sm hover:bg-white/10 data-[state=on]:shadow-sm sm:gap-2"
+                className="data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:hover:bg-background h-9 min-w-0 gap-1.5 px-2 text-sm hover:bg-white/10 data-[state=on]:shadow-sm sm:gap-2"
                 value="beatsaver"
                 aria-label={t('beatsaver')}
               >
@@ -108,12 +108,12 @@ export function SourcePicker({
                   alt=""
                   aria-hidden="true"
                 />
-                <span className="hidden sm:inline">{t('beatsaver')}</span>
+                <span className="hidden min-w-0 truncate sm:block">{t('beatsaver')}</span>
               </ToggleGroupItem>
             )}
             {isViewerSourceEnabled('scoresaber') && (
               <ToggleGroupItem
-                className="data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:hover:bg-background h-9 gap-1.5 px-2 text-sm hover:bg-white/10 data-[state=on]:shadow-sm sm:gap-2"
+                className="data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:hover:bg-background h-9 min-w-0 gap-1.5 px-2 text-sm hover:bg-white/10 data-[state=on]:shadow-sm sm:gap-2"
                 value="scoresaber"
                 aria-label={t('scoresaber')}
               >
@@ -123,12 +123,12 @@ export function SourcePicker({
                   alt=""
                   aria-hidden="true"
                 />
-                <span className="hidden sm:inline">{t('scoresaber')}</span>
+                <span className="hidden min-w-0 truncate sm:block">{t('scoresaber')}</span>
               </ToggleGroupItem>
             )}
             {isViewerSourceEnabled('beatleader') && (
               <ToggleGroupItem
-                className="data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:hover:bg-background h-9 gap-1.5 px-2 text-sm hover:bg-white/10 data-[state=on]:shadow-sm sm:gap-2"
+                className="data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:hover:bg-background h-9 min-w-0 gap-1.5 px-2 text-sm hover:bg-white/10 data-[state=on]:shadow-sm sm:gap-2"
                 value="beatleader"
                 aria-label={t('beatleader')}
               >
@@ -138,12 +138,12 @@ export function SourcePicker({
                   alt=""
                   aria-hidden="true"
                 />
-                <span className="hidden sm:inline">{t('beatleader')}</span>
+                <span className="hidden min-w-0 truncate sm:block">{t('beatleader')}</span>
               </ToggleGroupItem>
             )}
             {isViewerSourceEnabled('ssr') && (
               <ToggleGroupItem
-                className="data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:hover:bg-background h-9 gap-1.5 px-2 text-sm hover:bg-white/10 data-[state=on]:shadow-sm sm:gap-2"
+                className="data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:hover:bg-background h-9 min-w-0 gap-1.5 px-2 text-sm hover:bg-white/10 data-[state=on]:shadow-sm sm:gap-2"
                 value="ssr"
                 aria-label={t('ssr')}
               >
@@ -153,16 +153,16 @@ export function SourcePicker({
                   alt=""
                   aria-hidden="true"
                 />
-                <span className="hidden sm:inline">{t('ssr')}</span>
+                <span className="hidden min-w-0 truncate sm:block">{t('ssr')}</span>
               </ToggleGroupItem>
             )}
             <ToggleGroupItem
-              className="data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:hover:bg-background h-9 gap-1.5 px-2 text-sm hover:bg-white/10 data-[state=on]:shadow-sm sm:gap-2"
+              className="data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:hover:bg-background h-9 min-w-0 gap-1.5 px-2 text-sm hover:bg-white/10 data-[state=on]:shadow-sm sm:gap-2"
               value="link"
               aria-label={t('link')}
             >
               <LinkIcon className="size-4 sm:size-5" />
-              <span className="hidden sm:inline">{t('link')}</span>
+              <span className="hidden min-w-0 truncate sm:block">{t('link')}</span>
             </ToggleGroupItem>
           </ToggleGroup>
           <form
