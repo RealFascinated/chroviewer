@@ -32,7 +32,7 @@ const scoreSchema = z.object({
         avatar: z.string().nullish(),
       })
       .optional(),
-    beatLeaderScore: z.object({ scoreId: z.number().int().nonnegative(), savedReplay: z.boolean() }).optional(),
+    beatLeaderScore: z.object({ scoreId: z.number().int().nonnegative() }).optional(),
   }),
   leaderboard: z.object({
     songHash: z.string().min(1),
@@ -66,7 +66,7 @@ export async function fetchSsrReplayMetadata(scoreId: string, options: ResolveOp
       }),
     );
     const beatLeader = data.score.beatLeaderScore;
-    if (beatLeader?.savedReplay !== true) {
+    if (beatLeader === undefined) {
       return Result.err(
         new SourceError({ message: `SSR score ${scoreId} has no replay`, source: 'ssr', operation: 'validate-score' }),
       );
