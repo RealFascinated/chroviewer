@@ -27,6 +27,7 @@ import {
   lookupScoreSaber,
   scoreSaberReference,
 } from '../../sources/scoresaber/provider';
+import { fetchSsrReplayFile, fetchSsrReplayMetadata, ssrReference } from '../../sources/ssr/provider';
 import { isViewerSourceEnabled } from '../../sources/source-config';
 import { SourceError } from '../../sources/source-error';
 import type {
@@ -48,6 +49,7 @@ type RemoteSourceCommand = { requestId: number } & (
   | { type: 'shared-map'; mapSource: string }
   | { type: 'shared-replay'; replayUrl: string; beat?: number; autoplay?: boolean }
   | { type: 'shared-score'; scoreId: string; beat?: number; autoplay?: boolean }
+  | { type: 'shared-ssr'; scoreId: string; beat?: number; autoplay?: boolean }
   | { type: 'shared-beatleader'; scoreId: string; beat?: number; autoplay?: boolean }
 );
 
@@ -101,7 +103,7 @@ export function useViewerRemoteSource({
   const [sourceInput, setSourceInput] = useState('');
   const [sourceDownload, setSourceDownload] = useState<SourceDownload | null>(null);
 
-  function disabledSource(source: 'beatleader' | 'beatsaver' | 'scoresaber') {
+  function disabledSource(source: 'beatleader' | 'beatsaver' | 'scoresaber' | 'ssr') {
     return Result.err(
       new SourceError({
         message: t('errors.sourceDisabled'),
@@ -227,6 +229,43 @@ export function useViewerRemoteSource({
       }
 
       pendingSharedViewRef.current = pending;
+      yield* Result.await(
+        loadSourceFiles(requestId, map.files, replay, {
+          identity: { key: map.key, hash: map.hash },
+          scoreIdBL: source.scoreId,
+          player: source.player,
+        }),
+      );
+      return Result.ok(undefined);
+    });
+  }
+
+  async function loadSsrScore(requestId: number, scoreId: string, pending: { beat?: number; autoplay?: boolean } = {}) {
+    if (!isViewerSourceEnabled('ssr')) return disabledSource('ssr');
+    return Result.gen(async function* () {
+      const source = yield* Result.await(fetchSsrReplayMetadata(scoreId, downloadOptions('ssr', requestId)));
+      if (!isSourceRequestCurrent(requestId)) return Result.ok(undefined);
+      const [replayResult, mapResult] = await Promise.all([
+        fetchSsrReplayFile(source.replayUrl, downloadOptions('ssr', requestId)).then((result) =>
+          result.isErr() ? Result.err(result.error) : parseReplay(result.value, 'beatleader'),
+        ),
+        fetchBeatSaverHash(source.hash, downloadOptions('beatsaver', requestId)),
+      ]);
+      if (!isSourceRequestCurrent(requestId)) return Result.ok(undefined);
+      const replay = yield* replayResult;
+      const map = yield* mapResult;
+      if (!isSourceRequestCurrent(requestId)) return Result.ok(undefined);
+      if (replayMapHash(replay)?.toLowerCase() !== source.hash.toLowerCase()) {
+        return Result.err(
+          new SourceError({
+            message: t('errors.beatleaderReplayMapMismatch'),
+            source: 'ssr',
+            operation: 'validate-replay-map',
+          }),
+        );
+      }
+      pendingSharedViewRef.current = pending;
+      // SSR serves BeatLeader replays, so the loaded view is shareable as a BeatLeader score link.
       yield* Result.await(
         loadSourceFiles(requestId, map.files, replay, {
           identity: { key: map.key, hash: map.hash },
@@ -382,6 +421,16 @@ export function useViewerRemoteSource({
         yield* Result.await(loadScoreSaberScore(requestId, scoreId));
         return Result.ok(undefined);
       }
+      if (sourceType === 'ssr') {
+        const scoreId = input.trim().replace(/^ssr:\s*/i, '');
+        if (!/^\d+$/.test(scoreId)) {
+          return Result.err(
+            new SourceError({ message: sourceT('invalidSsrScoreId'), source: 'ssr', operation: 'parse-score-id' }),
+          );
+        }
+        yield* Result.await(loadSsrScore(requestId, scoreId));
+        return Result.ok(undefined);
+      }
       if (sourceType === 'beatleader') {
         const scoreId = input.trim();
         if (!/^\d+$/.test(scoreId)) {
@@ -409,6 +458,11 @@ export function useViewerRemoteSource({
           return Result.ok(undefined);
         }
         yield* Result.await(loadLookupSource(requestId, choices[0]));
+        return Result.ok(undefined);
+      }
+      const ssr = isViewerSourceEnabled('ssr') ? ssrReference(input) : null;
+      if (ssr !== null) {
+        yield* Result.await(loadSsrScore(requestId, ssr.id));
         return Result.ok(undefined);
       }
       const beatLeader = isViewerSourceEnabled('beatleader') ? beatLeaderReference(input) : null;
@@ -442,6 +496,11 @@ export function useViewerRemoteSource({
         });
       case 'shared-score':
         return loadScoreSaberScore(command.requestId, command.scoreId, {
+          beat: command.beat,
+          autoplay: command.autoplay,
+        });
+      case 'shared-ssr':
+        return loadSsrScore(command.requestId, command.scoreId, {
           beat: command.beat,
           autoplay: command.autoplay,
         });
@@ -537,6 +596,22 @@ export function useViewerRemoteSource({
       sourceMutation.mutate({
         type: 'shared-score',
         scoreId: search.scoreId,
+        beat: search.beat,
+        autoplay: search.autoplay,
+        requestId,
+      });
+      return;
+    }
+    if (search.scoreIdSSR !== undefined) {
+      const requestId = beginSourceRequest();
+      const sharedSettings = search.settings;
+      if (sharedSettings !== undefined) {
+        setSettings((current) => applySharedViewerSettings(current, sharedSettings));
+      }
+      setSourceInput(`ssr:${search.scoreIdSSR}`);
+      sourceMutation.mutate({
+        type: 'shared-ssr',
+        scoreId: search.scoreIdSSR,
         beat: search.beat,
         autoplay: search.autoplay,
         requestId,

@@ -16,7 +16,7 @@ ARG VITE_BEATSAVER_API_URL=https://api.beatsaver.com
 ARG VITE_SCORESABER_API_URL=https://scoresaber.com
 ARG VITE_BEATLEADER_API_URL=https://api.beatleader.com
 ARG VITE_LUDUS_URL=https://ludus-1.scoresaber.com
-ARG VITE_ENABLED_SOURCES=beatsaver,scoresaber,beatleader
+ARG VITE_ENABLED_SOURCES=beatsaver,scoresaber,beatleader,ssr
 
 ENV NODE_ENV=production \
     VITE_BEATSAVER_API_URL=${VITE_BEATSAVER_API_URL} \

@@ -2,8 +2,13 @@ import type { Result } from 'better-result';
 
 import type { SourceError } from './source-error';
 
-export type ConfigurableViewerSource = 'beatsaver' | 'scoresaber' | 'beatleader';
-export const configurableViewerSources: readonly ConfigurableViewerSource[] = ['beatsaver', 'scoresaber', 'beatleader'];
+export type ConfigurableViewerSource = 'beatsaver' | 'scoresaber' | 'beatleader' | 'ssr';
+export const configurableViewerSources: readonly ConfigurableViewerSource[] = [
+  'beatsaver',
+  'scoresaber',
+  'beatleader',
+  'ssr',
+];
 
 export interface MapSourceFile {
   name: string;

@@ -7,5 +7,6 @@ interface ImportMetaEnv {
   readonly VITE_BEATSAVER_API_URL?: string;
   readonly VITE_ENABLED_SOURCES?: string;
   readonly VITE_LUDUS_URL?: string;
+  readonly VITE_SSR_API_URL?: string;
   readonly VITE_SCORESABER_API_URL?: string;
 }

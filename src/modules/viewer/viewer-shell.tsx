@@ -133,7 +133,10 @@ export function ViewerShell() {
     lightshowModeRef,
     requestedMapRow: mapSelectionRow,
     skipInitialMenuEnvironment:
-      search.map !== undefined || search.scoreId !== undefined || search.scoreIdBL !== undefined,
+      search.map !== undefined ||
+      search.scoreId !== undefined ||
+      search.scoreIdBL !== undefined ||
+      search.scoreIdSSR !== undefined,
     setActivePanel,
     setError,
     setLightshowMode,

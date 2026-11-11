@@ -2,7 +2,7 @@ import { TaggedError } from 'better-result';
 
 export class SourceError extends TaggedError('SourceError')<{
   message: string;
-  source: 'archive' | 'beatleader' | 'beatsaver' | 'local' | 'scoresaber';
+  source: 'archive' | 'beatleader' | 'beatsaver' | 'local' | 'scoresaber' | 'ssr';
   operation: string;
   status?: number;
   cause?: unknown;

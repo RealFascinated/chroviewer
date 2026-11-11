@@ -42,25 +42,30 @@ export function SourcePicker({
   const [source, setSource] = useState<ViewerSource>(initialSource);
   const scoreSaber = source === 'scoresaber';
   const beatLeader = source === 'beatleader';
-  const isScore = scoreSaber || beatLeader;
+  const ssr = source === 'ssr';
+  const isScore = scoreSaber || beatLeader || ssr;
   const link = source === 'link';
   const trimmedInput = input.trim();
   const validInput =
     trimmedInput !== '' && (!isScore || /^\d+$/.test(trimmedInput)) && (!link || isRemoteSourceUrl(trimmedInput));
-  const inputLabel = scoreSaber
-    ? t('scoresaberInputLabel')
-    : beatLeader
-      ? t('beatleaderInputLabel')
-      : link
-        ? t('linkInputLabel')
-        : t('beatsaverInputLabel');
-  const inputPlaceholder = scoreSaber
-    ? t('scoresaberInputPlaceholder')
-    : beatLeader
-      ? t('beatleaderInputPlaceholder')
-      : link
-        ? t('linkInputPlaceholder')
-        : t('beatsaverInputPlaceholder');
+  const inputLabel = ssr
+    ? t('ssrInputLabel')
+    : scoreSaber
+      ? t('scoresaberInputLabel')
+      : beatLeader
+        ? t('beatleaderInputLabel')
+        : link
+          ? t('linkInputLabel')
+          : t('beatsaverInputLabel');
+  const inputPlaceholder = ssr
+    ? t('ssrInputPlaceholder')
+    : scoreSaber
+      ? t('scoresaberInputPlaceholder')
+      : beatLeader
+        ? t('beatleaderInputPlaceholder')
+        : link
+          ? t('linkInputPlaceholder')
+          : t('beatsaverInputPlaceholder');
 
   return (
     <>
@@ -81,7 +86,13 @@ export function SourcePicker({
             value={source}
             aria-label={t('sourceType')}
             onValueChange={(value) => {
-              if (value === 'beatsaver' || value === 'link' || value === 'scoresaber' || value === 'beatleader')
+              if (
+                value === 'beatsaver' ||
+                value === 'link' ||
+                value === 'scoresaber' ||
+                value === 'beatleader' ||
+                value === 'ssr'
+              )
                 setSource(value);
             }}
           >
@@ -128,6 +139,21 @@ export function SourcePicker({
                   aria-hidden="true"
                 />
                 <span className="hidden sm:inline">{t('beatleader')}</span>
+              </ToggleGroupItem>
+            )}
+            {isViewerSourceEnabled('ssr') && (
+              <ToggleGroupItem
+                className="data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:hover:bg-background h-9 gap-1.5 px-2 text-sm hover:bg-white/10 data-[state=on]:shadow-sm sm:gap-2"
+                value="ssr"
+                aria-label={t('ssr')}
+              >
+                <img
+                  className="size-4 sm:size-5"
+                  src={`${import.meta.env.BASE_URL}scoresaber.svg`}
+                  alt=""
+                  aria-hidden="true"
+                />
+                <span className="hidden sm:inline">{t('ssr')}</span>
               </ToggleGroupItem>
             )}
             <ToggleGroupItem

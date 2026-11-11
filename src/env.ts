@@ -28,6 +28,7 @@ export const env = createEnv({
       .transform((value) => value.replace(/\/$/, ''))
       .optional()
       .default('https://proxy.fascinated.cc'),
+    VITE_SSR_API_URL: publicApiUrl.default('https://ssr-api.fascinated.cc'),
     VITE_LUDUS_URL: publicApiUrl.default('https://ludus-1.scoresaber.com'),
     VITE_ENABLED_SOURCES: enabledViewerSourcesSchema,
   },
@@ -36,6 +37,7 @@ export const env = createEnv({
     VITE_SCORESABER_API_URL: import.meta.env.VITE_SCORESABER_API_URL,
     VITE_BEATLEADER_API_URL: import.meta.env.VITE_BEATLEADER_API_URL,
     VITE_BEATLEADER_PROXY_URL: import.meta.env.VITE_BEATLEADER_PROXY_URL,
+    VITE_SSR_API_URL: import.meta.env.VITE_SSR_API_URL,
     VITE_LUDUS_URL: import.meta.env.VITE_LUDUS_URL,
     VITE_ENABLED_SOURCES: import.meta.env.VITE_ENABLED_SOURCES,
   },

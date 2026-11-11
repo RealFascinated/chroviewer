@@ -42,6 +42,7 @@ export const viewerSearchSchema = z.pipe(
     replayUrl: z.catch(z.optional(remoteSourceUrlSchema), undefined),
     scoreId: z.catch(z.optional(scoreIdSchema), undefined),
     scoreIdBL: z.catch(z.optional(scoreIdSchema), undefined),
+    scoreIdSSR: z.catch(z.optional(scoreIdSchema), undefined),
     difficulty: z.catch(z.optional(difficultyRankSchema), undefined),
     characteristic: z.catch(z.optional(characteristicSchema), undefined),
     beat: z.catch(z.optional(nonnegativeNumberSchema), undefined),
@@ -63,6 +64,7 @@ export const viewerSearchSchema = z.pipe(
         replayUrl: undefined,
         scoreId: undefined,
         scoreIdBL: undefined,
+        scoreIdSSR: undefined,
         difficulty: undefined,
         characteristic: undefined,
         beat: undefined,
@@ -82,6 +84,7 @@ export const viewerSearchSchema = z.pipe(
         replayUrl: undefined,
         scoreId: undefined,
         scoreIdBL: undefined,
+        scoreIdSSR: undefined,
         difficulty: undefined,
         characteristic: undefined,
         beat: undefined,
@@ -93,13 +96,37 @@ export const viewerSearchSchema = z.pipe(
         map: undefined,
         scoreId: undefined,
         scoreIdBL: undefined,
+        scoreIdSSR: undefined,
         difficulty: undefined,
         characteristic: undefined,
       };
     if (search.scoreId !== undefined)
-      return { ...search, map: undefined, scoreIdBL: undefined, difficulty: undefined, characteristic: undefined };
+      return {
+        ...search,
+        map: undefined,
+        scoreIdBL: undefined,
+        scoreIdSSR: undefined,
+        difficulty: undefined,
+        characteristic: undefined,
+      };
     if (search.scoreIdBL !== undefined)
-      return { ...search, map: undefined, scoreId: undefined, difficulty: undefined, characteristic: undefined };
+      return {
+        ...search,
+        map: undefined,
+        scoreId: undefined,
+        scoreIdSSR: undefined,
+        difficulty: undefined,
+        characteristic: undefined,
+      };
+    if (search.scoreIdSSR !== undefined)
+      return {
+        ...search,
+        map: undefined,
+        scoreId: undefined,
+        scoreIdBL: undefined,
+        difficulty: undefined,
+        characteristic: undefined,
+      };
     return search;
   }),
 );
